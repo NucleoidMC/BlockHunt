@@ -1,4 +1,5 @@
 {
+  "game.blockhunt.blockhunt": "Block Hunt",
   "gameType.blockhunt.blockhunt": "Block Hunt",
 
   "event.blockhunt.block_changed": "You are now disguised as a %s!",
