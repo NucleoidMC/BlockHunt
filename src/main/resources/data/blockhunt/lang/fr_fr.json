@@ -1,0 +1,32 @@
+{
+  "gameType.blockhunt.blockhunt": "Block Hunt",
+
+  "game.blockhunt.fort_du_perdu": "Block Hunt : Fort du perdu",
+
+  "event.blockhunt.block_changed": "T'es maintenant déguisé en %s !",
+  "event.blockhunt.already_block": "T'es déjà un %s !",
+
+  "event.blockhunt.hider_found": "%s a trouvé %s !",
+  "event.blockhunt.seeker_killed": "%s a été éliminé par %s !",
+
+  "event.blockhunt.death": "T'es mort.",
+  "event.blockhunt.death_time": "Tu vas réapparaître dans %s secondes.",
+
+  "event.blockhunt.seeker_spawn": "T'es un chercheur !",
+  "event.blockhunt.hider_spawn": "T'es un cacheur !",
+
+  "bossbar.blockhunt.not_hidden": "T'es pas caché !",
+  "bossbar.blockhunt.hidden": "T'es caché.",
+
+  "bossbar.blockhunt.seekers_release": "Les chercheurs sont lâchés !",
+
+  "sidebar.blockhunt.game_time": "Temps restant dans la partie : %s",
+  "sidebar.blockhunt.seeker_countdown": "Les chercheurs arrivent dans %s...",
+  "sidebar.blockhunt.map_name": "Map : %s",
+  "sidebar.blockhunt.seeker_count": "Chercheur(s) : %s",
+  "sidebar.blockhunt.hider_count": "Cacheur(s) : %s",
+
+  "event.blockhunt.win": "L'équipe gagnante est %s !",
+  "event.blockhunt.win_hider": "Ils avaient %s cacheur(s) restants !",
+  "event.blockhunt.win_seeker": "Ils ont capturé %s cacheur(s) avec succès !"
+}

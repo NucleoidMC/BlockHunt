@@ -29,8 +29,4 @@
   "event.blockhunt.win": "The winning team is %s!",
   "event.blockhunt.win_hider": "They had %s hider(s) left!",
   "event.blockhunt.win_seeker": "They successfully caught %s hider(s)!"
-
-
-
-
 }
