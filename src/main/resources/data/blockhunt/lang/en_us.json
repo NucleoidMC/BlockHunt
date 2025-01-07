@@ -1,6 +1,7 @@
 {
-  "game.blockhunt.blockhunt": "Block Hunt",
   "gameType.blockhunt.blockhunt": "Block Hunt",
+
+  "game.blockhunt.fort_du_perdu": "Block Hunt: Fort du perdu",
 
   "event.blockhunt.block_changed": "You are now disguised as a %s!",
   "event.blockhunt.already_block": "You are already a %s!",
