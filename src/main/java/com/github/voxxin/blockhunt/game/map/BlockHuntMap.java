@@ -11,8 +11,8 @@ import net.minecraft.world.Difficulty;
 import net.minecraft.world.GameRules;
 import xyz.nucleoid.fantasy.RuntimeWorldConfig;
 import xyz.nucleoid.map_templates.MapTemplateSerializer;
-import xyz.nucleoid.plasmid.game.GameOpenContext;
-import xyz.nucleoid.plasmid.game.world.generator.TemplateChunkGenerator;
+import xyz.nucleoid.plasmid.api.game.GameOpenContext;
+import xyz.nucleoid.plasmid.api.game.world.generator.TemplateChunkGenerator;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -113,7 +113,7 @@ public record BlockHuntMap(Map<String, Vec3d> spawns, ArrayList<Object> noIntera
                 }
 
                 BlockHuntAnimation newAnimation =
-                        new BlockHuntAnimation(new Identifier(config.mapConfig().id().getNamespace(), animationParts[0]),
+                        new BlockHuntAnimation(Identifier.of(config.mapConfig().id().getNamespace(), animationParts[0]),
                         animationParts[1].contains("play") ?
                                 new BlockHuntAnimationPoints(region.getBounds().min(), region.getBounds().max(), true) : null,
                         animationParts[1].contains("settings") ? region.getBounds().max() : null);

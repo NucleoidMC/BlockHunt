@@ -11,12 +11,14 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameMode;
-import xyz.nucleoid.plasmid.game.*;
-import xyz.nucleoid.plasmid.game.common.GameWaitingLobby;
-import xyz.nucleoid.plasmid.game.common.config.PlayerConfig;
-import xyz.nucleoid.plasmid.game.event.GameActivityEvents;
-import xyz.nucleoid.plasmid.game.event.GamePlayerEvents;
-import xyz.nucleoid.plasmid.game.rule.GameRuleType;
+import xyz.nucleoid.plasmid.api.game.*;
+import xyz.nucleoid.plasmid.api.game.common.GameWaitingLobby;
+import xyz.nucleoid.plasmid.api.game.common.config.WaitingLobbyConfig;
+import xyz.nucleoid.plasmid.api.game.event.GameActivityEvents;
+import xyz.nucleoid.plasmid.api.game.event.GamePlayerEvents;
+import xyz.nucleoid.plasmid.api.game.player.JoinOffer;
+import xyz.nucleoid.plasmid.api.game.rule.GameRuleType;
+import xyz.nucleoid.stimuli.event.EventResult;
 import xyz.nucleoid.stimuli.event.block.BlockUseEvent;
 import xyz.nucleoid.stimuli.event.player.PlayerDeathEvent;
 
@@ -30,20 +32,20 @@ public class BlockHuntWaiting {
     private final BlockHuntConfig config;
     private final BlockHuntSpawnLogic spawnLogic;
     private final ServerWorld world;
-    private static List<Block> deniedBlockInteractions = new ArrayList<>();
+    private static final List<Block> deniedBlockInteractions = new ArrayList<>();
 
     private static boolean warnedForSpawns = false;
 
     private BlockHuntWaiting(GameSpace gameSpace, ServerWorld world, BlockHuntMap map, BlockHuntConfig config) {
         this.gameSpace = gameSpace;
-        this.thisMap = map;
+        thisMap = map;
         this.config = config;
         this.world = world;
         this.spawnLogic = new BlockHuntSpawnLogic(gameSpace, world, map);
     }
 
     public static GameOpenProcedure open(GameOpenContext<BlockHuntConfig> context) {
-        PlayerConfig config = new PlayerConfig(2, 32);
+        WaitingLobbyConfig config = new WaitingLobbyConfig(2, 32);
         BlockHuntMap map;
 
         try {
@@ -70,19 +72,20 @@ public class BlockHuntWaiting {
             });
 
             // Game Rules
-            game.setRule(GameRuleType.FALL_DAMAGE, ActionResult.FAIL);
-            game.setRule(GameRuleType.PICKUP_ITEMS, ActionResult.FAIL);
-            game.setRule(GameRuleType.CRAFTING, ActionResult.FAIL);
-            game.setRule(GameRuleType.BREAK_BLOCKS, ActionResult.FAIL);
-            game.setRule(GameRuleType.FIRE_TICK, ActionResult.FAIL);
-            game.setRule(GameRuleType.FLUID_FLOW, ActionResult.FAIL);
-            game.setRule(GameRuleType.HUNGER, ActionResult.FAIL);
-            game.setRule(GameRuleType.MODIFY_ARMOR, ActionResult.FAIL);
-            game.setRule(GameRuleType.PLACE_BLOCKS, ActionResult.FAIL);
+            game.setRule(GameRuleType.FALL_DAMAGE, EventResult.DENY);
+            game.setRule(GameRuleType.PICKUP_ITEMS, EventResult.DENY);
+            game.setRule(GameRuleType.CRAFTING, EventResult.DENY);
+            game.setRule(GameRuleType.BREAK_BLOCKS, EventResult.DENY);
+            game.setRule(GameRuleType.FIRE_TICK, EventResult.DENY);
+            game.setRule(GameRuleType.FLUID_FLOW, EventResult.DENY);
+            game.setRule(GameRuleType.HUNGER, EventResult.DENY);
+            game.setRule(GameRuleType.MODIFY_ARMOR, EventResult.DENY);
+            game.setRule(GameRuleType.PLACE_BLOCKS, EventResult.DENY);
 
             game.listen(GameActivityEvents.REQUEST_START, waiting::requestStart);
             game.listen(GamePlayerEvents.ADD, waiting::addPlayer);
-            game.listen(GamePlayerEvents.OFFER, (offer) -> offer.accept(world, map.spawns().containsKey("spawn_everyone") ? map.spawns().get("spawn_everyone") : map.spawns().get("spawn_hider")));
+            game.listen(GamePlayerEvents.OFFER, JoinOffer::accept);
+            game.listen(GamePlayerEvents.ACCEPT, (offer) -> offer.teleport(world, map.spawns().containsKey("spawn_everyone") ? map.spawns().get("spawn_everyone") : map.spawns().get("spawn_hider")));
             game.listen(PlayerDeathEvent.EVENT, waiting::onPlayerDeath);
 
             game.listen(BlockUseEvent.EVENT, waiting::allowInteraction);
@@ -112,10 +115,10 @@ public class BlockHuntWaiting {
         this.spawnPlayer(player);
     }
 
-    private ActionResult onPlayerDeath(ServerPlayerEntity player, DamageSource source) {
+    private EventResult onPlayerDeath(ServerPlayerEntity player, DamageSource source) {
         player.setHealth(20.0f);
         this.spawnPlayer(player);
-        return ActionResult.FAIL;
+        return EventResult.DENY;
     }
 
     private void spawnPlayer(ServerPlayerEntity player) {

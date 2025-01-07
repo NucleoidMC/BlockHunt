@@ -2,6 +2,8 @@ package com.github.voxxin.blockhunt.game;
 
 import com.github.voxxin.blockhunt.BlockHunt;
 import com.github.voxxin.blockhunt.game.map.BlockHuntMap;
+import com.google.common.collect.ImmutableSet;
+import net.minecraft.network.packet.s2c.play.PositionFlag;
 import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -10,12 +12,15 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameMode;
-import xyz.nucleoid.plasmid.game.GameSpace;
+import xyz.nucleoid.plasmid.api.game.GameSpace;
+
+import java.util.Set;
 
 public class BlockHuntSpawnLogic {
     private final GameSpace gameSpace;
     private final BlockHuntMap map;
     private final ServerWorld world;
+    private final Set<PositionFlag> flags = ImmutableSet.of();
 
     public BlockHuntSpawnLogic(GameSpace gameSpace, ServerWorld world, BlockHuntMap map) {
         this.gameSpace = gameSpace;
@@ -30,49 +35,62 @@ public class BlockHuntSpawnLogic {
     }
 
     public void spawnPlayer(ServerPlayerEntity player, BlockHuntPlayer participant) {
-
-        var spawnPos = map.spawns().containsKey("spawn_everyone") ? (Vec3d) map.spawns().get("spawn_everyone") : (Vec3d) map.spawns().get("spawn_hider");
-
-        if (participant == null) {
-            player.teleport(this.world, spawnPos.x, spawnPos.y, spawnPos.z, 0.0F, 0.0F);
+        var spawns = map.spawns();
+        if (spawns == null) {
+            BlockHunt.LOGGER.error("Spawns are not defined!");
             return;
         }
 
-        var spawnHides = (Vec3d) map.spawns().get("spawn_hider");
-        var spawnSeekers = (Vec3d) map.spawns().get("spawn_seeker");
+        // Determine the default spawn position
+        Vec3d spawnPos = (Vec3d) spawns.getOrDefault("spawn_everyone", spawns.get("spawn_hider"));
+        if (participant == null) {
+            player.teleport(this.world, spawnPos.x, spawnPos.y, spawnPos.z, flags, 0.0F, 0.0F, true);
+            return;
+        }
 
+        // Determine team-specific spawn position
         Team team = participant.getTeam();
+        if (team == null) {
+            BlockHunt.LOGGER.error("Cannot spawn player! Team is not defined!");
+            return;
+        }
 
         switch (team.getName()) {
-            case "seekers" -> {
-                spawnPos = spawnSeekers;
-            }
-            case "hiders" -> {
-                spawnPos = spawnHides;
-            }
+            case "seekers" -> spawnPos = (Vec3d) spawns.get("spawn_seeker");
+            case "hiders" -> spawnPos = (Vec3d) spawns.get("spawn_hider");
             default -> {
-                BlockHunt.LOGGER.error("Cannot spawn player! Team is not defined!");
+                BlockHunt.LOGGER.error("Cannot spawn player! Unknown team: " + team.getName());
                 return;
             }
         }
 
+        // Find a safe position
         float radius = 4.5f;
-        int x = (int) (spawnPos.getX() + MathHelper.nextFloat(player.getRandom(), -radius, radius));
-        int z = (int) (spawnPos.getZ() + MathHelper.nextFloat(player.getRandom(), -radius, radius));
+        BlockPos safePos = null;
+        for (int attempt = 0; attempt < 100; attempt++) {
+            int x = MathHelper.floor(spawnPos.x + MathHelper.nextFloat(player.getRandom(), -radius, radius));
+            int z = MathHelper.floor(spawnPos.z + MathHelper.nextFloat(player.getRandom(), -radius, radius));
+            BlockPos pos = new BlockPos(x, MathHelper.floor(spawnPos.y), z);
 
-
-        while (!this.world.getBlockState(new BlockPos((int) x, (int) spawnPos.y, (int) z)).isAir() && !this.world.getBlockState(new BlockPos((int) x, (int) spawnPos.y+1, (int) z)).isAir()) {
-            x = (int) (spawnPos.getX() + MathHelper.nextFloat(player.getRandom(), -radius, radius));
-            z = (int) (spawnPos.getZ() + MathHelper.nextFloat(player.getRandom(), -radius, radius));
+            if (this.world.getBlockState(pos).isAir() &&
+                    this.world.getBlockState(pos.up()).isAir() &&
+                    !this.world.getBlockState(pos.down()).isAir()) {
+                safePos = pos;
+                break;
+            }
         }
 
-        float xPos = x + 0.5f;
-        float zPos = z + 0.5f;
+        if (safePos == null) {
+            BlockHunt.LOGGER.error("Failed to find a safe spawn location.");
+            return;
+        }
 
+        // Adjust position for finer placement
         float newRadius = 0.25f;
-        xPos = xPos + MathHelper.nextFloat(player.getRandom(), -newRadius, newRadius);
-        zPos = zPos + MathHelper.nextFloat(player.getRandom(), -newRadius, newRadius);
+        float xPos = safePos.getX() + 0.5f + MathHelper.nextFloat(player.getRandom(), -newRadius, newRadius);
+        float zPos = safePos.getZ() + 0.5f + MathHelper.nextFloat(player.getRandom(), -newRadius, newRadius);
 
-        player.teleport(this.world, xPos, spawnPos.y, zPos, 0.0F, 0.0F);
+        // Teleport player
+        player.teleport(this.world, xPos, safePos.getY(), zPos, flags, 0.0F, 0.0F, true);
     }
 }

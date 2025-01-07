@@ -7,4 +7,6 @@ import java.util.ArrayList;
 public interface WrittenBookItemExt {
 
     ArrayList<String> getPages(ItemStack book);
+
+    String getTitle(ItemStack book);
 }

@@ -27,15 +27,19 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.GameMode;
-import xyz.nucleoid.plasmid.game.GameCloseReason;
-import xyz.nucleoid.plasmid.game.GameLifecycle;
-import xyz.nucleoid.plasmid.game.GameSpace;
-import xyz.nucleoid.plasmid.game.common.GlobalWidgets;
-import xyz.nucleoid.plasmid.game.event.GameActivityEvents;
-import xyz.nucleoid.plasmid.game.event.GamePlayerEvents;
-import xyz.nucleoid.plasmid.game.player.PlayerSet;
-import xyz.nucleoid.plasmid.game.rule.GameRuleType;
-import xyz.nucleoid.plasmid.util.PlayerRef;
+import xyz.nucleoid.plasmid.api.game.GameCloseReason;
+import xyz.nucleoid.plasmid.api.game.GameLifecycle;
+import xyz.nucleoid.plasmid.api.game.GameSpace;
+import xyz.nucleoid.plasmid.api.game.common.GlobalWidgets;
+import xyz.nucleoid.plasmid.api.game.event.GameActivityEvents;
+import xyz.nucleoid.plasmid.api.game.event.GamePlayerEvents;
+import xyz.nucleoid.plasmid.api.game.player.JoinIntent;
+import xyz.nucleoid.plasmid.api.game.player.JoinOffer;
+import xyz.nucleoid.plasmid.api.game.player.JoinOfferResult;
+import xyz.nucleoid.plasmid.api.game.player.PlayerSet;
+import xyz.nucleoid.plasmid.api.game.rule.GameRuleType;
+import xyz.nucleoid.plasmid.api.util.PlayerRef;
+import xyz.nucleoid.stimuli.event.EventResult;
 import xyz.nucleoid.stimuli.event.block.BlockPunchEvent;
 import xyz.nucleoid.stimuli.event.block.BlockUseEvent;
 import xyz.nucleoid.stimuli.event.player.PlayerDamageEvent;
@@ -63,10 +67,6 @@ public class BlockHuntActive {
     private static Team seekersTeam = null;
     private static Team hidersTeam = null;
     private static Team spectatorTeam = null;
-
-    private int lastHiddenReset = 20;
-
-    private ArrayList<BlockHuntBossBar> bossBars = new ArrayList<>();
 
     private static final ArrayList<Block> deniedBlockInteractions = new ArrayList<>();
 
@@ -135,22 +135,23 @@ public class BlockHuntActive {
 
 
             // Game Rules
-            game.setRule(GameRuleType.FALL_DAMAGE, ActionResult.FAIL);
-            game.setRule(GameRuleType.PICKUP_ITEMS, ActionResult.FAIL);
-            game.setRule(GameRuleType.THROW_ITEMS, ActionResult.FAIL);
-            game.setRule(GameRuleType.CRAFTING, ActionResult.FAIL);
-            game.setRule(GameRuleType.FIRE_TICK, ActionResult.FAIL);
-            game.setRule(GameRuleType.FLUID_FLOW, ActionResult.FAIL);
-            game.setRule(GameRuleType.HUNGER, ActionResult.FAIL);
-            game.setRule(GameRuleType.MODIFY_ARMOR, ActionResult.FAIL);
-            //game.setRule(GameRuleType.PLACE_BLOCKS, ActionResult.FAIL);
+            game.setRule(GameRuleType.FALL_DAMAGE, EventResult.DENY);
+            game.setRule(GameRuleType.PICKUP_ITEMS, EventResult.DENY);
+            game.setRule(GameRuleType.THROW_ITEMS, EventResult.DENY);
+            game.setRule(GameRuleType.CRAFTING, EventResult.DENY);
+            game.setRule(GameRuleType.FIRE_TICK, EventResult.DENY);
+            game.setRule(GameRuleType.FLUID_FLOW, EventResult.DENY);
+            game.setRule(GameRuleType.HUNGER, EventResult.DENY);
+            game.setRule(GameRuleType.MODIFY_ARMOR, EventResult.DENY);
+            //game.setRule(GameRuleType.PLACE_BLOCKS, EventResult.DENY);
 
 
             // Unique Gamerules
 
             game.listen(GameActivityEvents.ENABLE, active::onOpen);
 
-            game.listen(GamePlayerEvents.OFFER, (offer) -> offer.accept(world, Vec3d.ZERO));
+            game.listen(GamePlayerEvents.OFFER, JoinOffer::accept);
+            game.listen(GamePlayerEvents.ACCEPT, (offer) -> offer.teleport(world, Vec3d.ZERO));
             game.listen(GamePlayerEvents.ADD, active::addPlayer);
             game.listen(GamePlayerEvents.REMOVE, active::removePlayer);
 
@@ -172,8 +173,8 @@ public class BlockHuntActive {
             seekerAnimation.settings.tick();
             if (seekerAnimation.settings.startTime == 0) {
                 BlockHunt.LOGGER.info("No start time set for seeker released animation. Defaulting to 1 minute.");
-                int mins = 1;
-                this.stageManager.onOpen(this.world.getTime(), this.config, (mins * 60) * 20);
+                int mins = 1200;
+                this.stageManager.onOpen(this.world.getTime(), this.config, mins);
             } else this.stageManager.onOpen(this.world.getTime(), this.config, (long) seekerAnimation.settings.startTime);
         } else {
             BlockHunt.LOGGER.fatal("No seeker released animation found. Please add one to your map.");
@@ -251,7 +252,7 @@ public class BlockHuntActive {
         return ActionResult.PASS;
     }
 
-    private ActionResult blockAttack(ServerPlayerEntity serverPlayerEntity, Direction direction, BlockPos blockPos) {
+    private EventResult blockAttack(ServerPlayerEntity serverPlayerEntity, Direction direction, BlockPos blockPos) {
         BlockPos blockPosHit = ((BlockHitResult) serverPlayerEntity.raycast(5, 0, false)).getBlockPos();
         BlockHuntPlayer player = this.participants.get(PlayerRef.of(serverPlayerEntity));
 
@@ -264,7 +265,7 @@ public class BlockHuntActive {
             }
         });
 
-        return ActionResult.FAIL;
+        return EventResult.DENY;
     }
 
     private void addPlayer(ServerPlayerEntity player) {
@@ -290,8 +291,8 @@ public class BlockHuntActive {
         }
     }
 
-    private ActionResult onPlayerDamage(ServerPlayerEntity player, DamageSource source, float amount) {
-        if (source.getSource() == null) return ActionResult.FAIL;
+    private EventResult onPlayerDamage(ServerPlayerEntity player, DamageSource source, float amount) {
+        if (source.getSource() == null) return EventResult.DENY;
 
         if (source.getSource().isPlayer()) {
             if (!player.isTeammate(source.getAttacker())) {
@@ -301,14 +302,14 @@ public class BlockHuntActive {
                     thisPlayer.updateTimeBar(true);
                     thisPlayer.setHidden(false);
                 }
-                return ActionResult.SUCCESS;
+                return EventResult.ALLOW;
             }
         }
 
-        return ActionResult.FAIL;
+        return EventResult.DENY;
     }
 
-    private ActionResult onPlayerDeath(ServerPlayerEntity player, DamageSource source) {
+    private EventResult onPlayerDeath(ServerPlayerEntity player, DamageSource source) {
         if (source.getSource().isPlayer()) {
             BlockHuntPlayer thisPlayer = this.participants.get(PlayerRef.of(player));
             BlockHuntPlayer thisAttacker = this.participants.get(PlayerRef.of((ServerPlayerEntity) source.getAttacker()));
@@ -355,7 +356,7 @@ public class BlockHuntActive {
             }
         }
 
-        return ActionResult.FAIL;
+        return EventResult.DENY;
     }
 
     private void spawnParticipant(ServerPlayerEntity player) {

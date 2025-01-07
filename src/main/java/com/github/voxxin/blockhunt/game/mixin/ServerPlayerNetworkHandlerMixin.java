@@ -22,7 +22,7 @@ public class ServerPlayerNetworkHandlerMixin {
     public void sendPacket(Packet<?> packet, PacketCallbacks callbacks, CallbackInfo ci) {
         //noinspection ConstantValue
         if (packet instanceof EntityEquipmentUpdateS2CPacket entityEquipmentUpdateS2CPacket && ((Object) this) instanceof ServerPlayNetworkHandler handler) {
-            int packetID = entityEquipmentUpdateS2CPacket.getId();
+            int packetID = entityEquipmentUpdateS2CPacket.getEntityId();
             if (handler.player.getServerWorld().getPlayers().stream().noneMatch(p -> p.getId() == packetID)) { ci.cancel(); }
 
             if (BlockHunt.deniedIDs.contains(packetID)) { ci.cancel(); }

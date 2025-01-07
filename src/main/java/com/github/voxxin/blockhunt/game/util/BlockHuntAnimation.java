@@ -4,6 +4,7 @@ import com.github.voxxin.blockhunt.BlockHunt;
 import com.github.voxxin.blockhunt.game.util.ext.WrittenBookItemExt;
 import net.minecraft.block.entity.LecternBlockEntity;
 import net.minecraft.client.gui.screen.ingame.BookScreen;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.WrittenBookItem;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.ActionResult;
@@ -130,8 +131,11 @@ public class BlockHuntAnimation {
                 WrittenBookItem book = (WrittenBookItem) lectern.getBook().getItem();
 
                 ArrayList<String> bookContents = ((WrittenBookItemExt)book).getPages(lectern.getBook());
+                String bookTitle = ((WrittenBookItemExt)book).getTitle(lectern.getBook());
 
-                if (!book.getName(lectern.getBook()).getString().equals(animationName.getPath())) {
+                if (!bookTitle.equals(animationName.getPath())) {
+                    System.out.println(bookTitle);
+
                     BlockHunt.LOGGER.error("Settings could not be created, since the book on lectern at position " + settingsPoint + " does not match the animation name " + animationName.getPath() + " (" + animationName + ") was looking for " + book.getName(lectern.getBook()));
                     return;
                 }
