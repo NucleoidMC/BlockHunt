@@ -3,10 +3,14 @@ package com.github.voxxin.blockhunt.game;
 import com.github.voxxin.blockhunt.game.util.BlockHuntBlock;
 import com.github.voxxin.blockhunt.game.util.BlockHuntBossBar;
 import com.github.voxxin.blockhunt.game.util.BlockHuntTitle;
+import it.unimi.dsi.fastutil.objects.ReferenceSet;
+import it.unimi.dsi.fastutil.objects.ReferenceSets;
+import it.unimi.dsi.fastutil.objects.ReferenceSortedSets;
 import net.minecraft.block.Block;
 import net.minecraft.component.ComponentType;
 import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.UnbreakableComponent;
+import net.minecraft.component.type.TooltipDisplayComponent;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.Item;
@@ -23,6 +27,8 @@ import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 import xyz.nucleoid.plasmid.api.game.common.GlobalWidgets;
 import xyz.nucleoid.plasmid.api.util.PlayerRef;
+
+import java.util.SequencedSet;
 
 public class BlockHuntPlayer {
     private final ServerWorld world;
@@ -132,10 +138,10 @@ public class BlockHuntPlayer {
 
                 this.player.getInventory().clear();
                 this.player.getInventory().setStack(0, new ItemStack(Items.IRON_SWORD));
-                this.player.getInventory().armor.set(0, itemWName(Items.CHAINMAIL_BOOTS, Text.of("§f§lHeavy Boots")));
-                this.player.getInventory().armor.set(1, itemWName(Items.CHAINMAIL_LEGGINGS, Text.of("§f§lHeavy Pants")));
-                this.player.getInventory().armor.set(2, itemWName(Items.CHAINMAIL_CHESTPLATE, Text.of("§f§lHeavy Chestplate")));
-                this.player.getInventory().armor.set(3, itemWName(Items.CHAINMAIL_HELMET, Text.of("§f§lHeavy Helmet")));
+                this.player.equipStack(EquipmentSlot.FEET, itemWName(Items.CHAINMAIL_BOOTS, Text.of("§f§lHeavy Boots")));
+                this.player.equipStack(EquipmentSlot.LEGS, itemWName(Items.CHAINMAIL_LEGGINGS, Text.of("§f§lHeavy Pants")));
+                this.player.equipStack(EquipmentSlot.CHEST, itemWName(Items.CHAINMAIL_CHESTPLATE, Text.of("§f§lHeavy Chestplate")));
+                this.player.equipStack(EquipmentSlot.HEAD, itemWName(Items.CHAINMAIL_HELMET, Text.of("§f§lHeavy Helmet")));
             }
             case "hiders" -> {
                 this.player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, StatusEffectInstance.INFINITE, 2, false, false));
@@ -144,21 +150,22 @@ public class BlockHuntPlayer {
 
                 this.player.getInventory().clear();
                 this.player.getInventory().setStack(0, new ItemStack(Items.STONE_SWORD));
-                this.player.getInventory().armor.set(0, itemWName(Items.LEATHER_BOOTS, Text.of("§f§lSneaky Boots")));
-                this.player.getInventory().armor.set(1, itemWName(Items.LEATHER_LEGGINGS, Text.of("§f§lSneaky Pants")));
-                this.player.getInventory().armor.set(2, itemWName(Items.LEATHER_CHESTPLATE, Text.of("§f§lSneaky Chestplate")));
-                this.player.getInventory().armor.set(3, itemWName(Items.LEATHER_HELMET, Text.of("§f§lSneaky Helmet")));
+                this.player.equipStack(EquipmentSlot.FEET, itemWName(Items.LEATHER_BOOTS, Text.of("§f§lSneaky Boots")));
+                this.player.equipStack(EquipmentSlot.LEGS, itemWName(Items.LEATHER_LEGGINGS, Text.of("§f§lSneaky Pants")));
+                this.player.equipStack(EquipmentSlot.CHEST, itemWName(Items.LEATHER_CHESTPLATE, Text.of("§f§lSneaky Chestplate")));
+                this.player.equipStack(EquipmentSlot.HEAD, itemWName(Items.LEATHER_HELMET, Text.of("§f§lSneaky Helmet")));
             }
         }
 
-        for (ItemStack item : this.player.getInventory().main) {
-            item.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(true));
-            item.set(DataComponentTypes.HIDE_TOOLTIP, Unit.INSTANCE);
+        for (ItemStack item : this.player.getInventory().getMainStacks()) {
+            item.set(DataComponentTypes.UNBREAKABLE, Unit.INSTANCE);
+            item.set(DataComponentTypes.TOOLTIP_DISPLAY, new TooltipDisplayComponent(true, ReferenceSortedSets.emptySet()));
         }
 
-        for (ItemStack item : this.player.getInventory().armor) {
-            item.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(true));
-            item.set(DataComponentTypes.HIDE_TOOLTIP, Unit.INSTANCE);
+        for (var slot : EquipmentSlot.values()) {
+            var item = this.player.getEquippedStack(slot);
+            item.set(DataComponentTypes.UNBREAKABLE, Unit.INSTANCE);
+            item.set(DataComponentTypes.TOOLTIP_DISPLAY, new TooltipDisplayComponent(true, ReferenceSortedSets.emptySet()));
         }
     }
 
