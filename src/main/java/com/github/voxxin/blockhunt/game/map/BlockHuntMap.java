@@ -21,6 +21,10 @@ import java.util.Map;
 
 public record BlockHuntMap(Map<String, Vec3d> spawns, ArrayList<Object> noInteractList,
                            ArrayList<Object> allowedDisguises, ArrayList<BlockHuntAnimation> animations, RuntimeWorldConfig worldConfig) {
+    public Vec3d getSpawnPos() {
+        return this.spawns().getOrDefault("spawn_everyone", this.spawns().get("spawn_hider"));
+    }
+    
     public static BlockHuntMap from(GameOpenContext<BlockHuntConfig> context) throws IOException {
         var server = context.server();
         var config = context.config();

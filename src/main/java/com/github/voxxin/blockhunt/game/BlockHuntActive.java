@@ -151,7 +151,7 @@ public class BlockHuntActive {
             game.listen(GameActivityEvents.ENABLE, active::onOpen);
 
             game.listen(GamePlayerEvents.OFFER, JoinOffer::accept);
-            game.listen(GamePlayerEvents.ACCEPT, (offer) -> offer.teleport(world, Vec3d.ZERO));
+            game.listen(GamePlayerEvents.ACCEPT, (offer) -> offer.teleport(world, map.getSpawnPos()));
             game.listen(GamePlayerEvents.ADD, active::addPlayer);
             game.listen(GamePlayerEvents.REMOVE, active::removePlayer);
 
@@ -269,7 +269,7 @@ public class BlockHuntActive {
     }
 
     private void addPlayer(ServerPlayerEntity player) {
-        if (gameSpace.getTime() < stageManager.finishTime && gameSpace.getTime() > stageManager.startTime) {
+        if (world.getTime() < stageManager.finishTime && world.getTime() > stageManager.startTime) {
             this.spawnLogic.resetPlayer(player, GameMode.SPECTATOR);
         }
     }

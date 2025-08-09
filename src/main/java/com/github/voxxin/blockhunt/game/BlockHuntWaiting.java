@@ -85,7 +85,7 @@ public class BlockHuntWaiting {
             game.listen(GameActivityEvents.REQUEST_START, waiting::requestStart);
             game.listen(GamePlayerEvents.ADD, waiting::addPlayer);
             game.listen(GamePlayerEvents.OFFER, JoinOffer::accept);
-            game.listen(GamePlayerEvents.ACCEPT, (offer) -> offer.teleport(world, map.spawns().containsKey("spawn_everyone") ? map.spawns().get("spawn_everyone") : map.spawns().get("spawn_hider")));
+            game.listen(GamePlayerEvents.ACCEPT, (offer) -> offer.teleport(world, map.getSpawnPos()));
             game.listen(PlayerDeathEvent.EVENT, waiting::onPlayerDeath);
 
             game.listen(BlockUseEvent.EVENT, waiting::allowInteraction);

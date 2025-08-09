@@ -3,6 +3,9 @@ package com.github.voxxin.blockhunt;
 import com.github.voxxin.blockhunt.game.BlockHuntConfig;
 import com.github.voxxin.blockhunt.game.BlockHuntWaiting;
 import net.fabricmc.api.ModInitializer;
+import net.minecraft.network.packet.Packet;
+import net.minecraft.network.packet.s2c.play.EntityEquipmentUpdateS2CPacket;
+import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,4 +32,13 @@ public class BlockHunt implements ModInitializer {
         return Identifier.of(ID, value);
     }
     public static List<Integer> deniedIDs = new ArrayList<>();
+
+    public static boolean shouldCancel(Packet<?> packet, ServerPlayNetworkHandler handler) {
+        if (packet instanceof EntityEquipmentUpdateS2CPacket entityEquipmentUpdateS2CPacket) {
+            int packetID = entityEquipmentUpdateS2CPacket.getEntityId();
+            return handler.player.getWorld().getPlayers().stream().noneMatch(p -> p.getId() == packetID) || BlockHunt.deniedIDs.contains(packetID);
+        }
+
+        return false;
+    }
 }
