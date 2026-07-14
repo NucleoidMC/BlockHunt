@@ -18,6 +18,6 @@
     "blockhunt.mixins.json"
   ],
   "depends": {
-    "fabric": "*"
+    "fabric-api": "*"
   }
 }

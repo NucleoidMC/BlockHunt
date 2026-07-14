@@ -2,7 +2,7 @@ package com.github.voxxin.blockhunt.game.map;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
 
 
 public record BlockHuntMapConfig(Identifier id) {

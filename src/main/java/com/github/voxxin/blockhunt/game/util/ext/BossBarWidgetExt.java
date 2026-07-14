@@ -1,8 +1,8 @@
 package com.github.voxxin.blockhunt.game.util.ext;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 
 public interface BossBarWidgetExt {
 
-    void blockHunt$addSinglePlayer(ServerPlayerEntity player);
+    void blockHunt$addSinglePlayer(ServerPlayer player);
 }

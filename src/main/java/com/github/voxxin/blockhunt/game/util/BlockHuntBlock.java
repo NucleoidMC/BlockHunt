@@ -1,22 +1,23 @@
 package com.github.voxxin.blockhunt.game.util;
 
 import com.github.voxxin.blockhunt.game.util.ext.DisplayEntityExt;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.decoration.DisplayEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Display.BlockDisplay;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Display;
+import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mutable;
 
-public class BlockHuntBlock extends DisplayEntity.BlockDisplayEntity {
+public class BlockHuntBlock extends Display.BlockDisplay {
 
-    BlockDisplayEntity blockDisplayEntity = this;
+    BlockDisplay blockDisplayEntity = this;
 
-    public BlockHuntBlock(EntityType<?> entityType, World world) {
-        super(entityType, world);
+    public BlockHuntBlock(EntityType<?> entityType, Level level) {
+        super(entityType, level);
         this.setNoGravity(true);
         this.setInvulnerable(true);
-        this.setTeleportDuration(1);
+        this.setPosRotInterpolationDuration(1);
     }
 
 //    public void setBlockState(BlockState state) {

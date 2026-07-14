@@ -1,9 +1,9 @@
 package com.github.voxxin.blockhunt.game.mixin;
 
 import com.github.voxxin.blockhunt.game.util.BlockHuntBlock;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.decoration.DisplayEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.entity.Display;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -11,19 +11,19 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(DisplayEntity.BlockDisplayEntity.class)
+@Mixin(Display.BlockDisplay.class)
 public abstract class BlockDisplayEntityMixin {
 
 
-    @Shadow @Nullable public abstract DisplayEntity.BlockDisplayEntity.Data getData();
+    @Shadow @Nullable public abstract Display.BlockDisplay.BlockRenderState blockRenderState();
 
-    @Shadow @Nullable private DisplayEntity.BlockDisplayEntity.Data data;
+    @Shadow @Nullable private Display.BlockDisplay.BlockRenderState blockRenderState;
 
     @Inject(at = @At("HEAD"), method = "getBlockState", cancellable = true)
     public void blockHunt$getBlockState(CallbackInfoReturnable<BlockState> cir) {
         if (((Object) this) instanceof BlockHuntBlock) {
-            DisplayEntity.BlockDisplayEntity.Data data = ((DisplayEntity.BlockDisplayEntity.Data) this.getData());
-            cir.setReturnValue(this.data != null && data.blockState() != null ? this.data.blockState() : Blocks.AIR.getDefaultState());
+            Display.BlockDisplay.BlockRenderState data = ((Display.BlockDisplay.BlockRenderState) this.blockRenderState());
+            cir.setReturnValue(this.blockRenderState != null && data.blockState() != null ? this.blockRenderState.blockState() : Blocks.AIR.defaultBlockState());
         }
     }
 }

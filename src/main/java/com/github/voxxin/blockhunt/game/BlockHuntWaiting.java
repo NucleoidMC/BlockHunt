@@ -2,15 +2,15 @@ package com.github.voxxin.blockhunt.game;
 
 import com.github.voxxin.blockhunt.BlockHunt;
 import com.github.voxxin.blockhunt.game.map.BlockHuntMap;
-import net.minecraft.block.Block;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.GameMode;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.GameType;
 import xyz.nucleoid.plasmid.api.game.*;
 import xyz.nucleoid.plasmid.api.game.common.GameWaitingLobby;
 import xyz.nucleoid.plasmid.api.game.common.config.WaitingLobbyConfig;
@@ -31,17 +31,17 @@ public class BlockHuntWaiting {
     private static BlockHuntMap thisMap;
     private final BlockHuntConfig config;
     private final BlockHuntSpawnLogic spawnLogic;
-    private final ServerWorld world;
+    private final ServerLevel level;
     private static final List<Block> deniedBlockInteractions = new ArrayList<>();
 
     private static boolean warnedForSpawns = false;
 
-    private BlockHuntWaiting(GameSpace gameSpace, ServerWorld world, BlockHuntMap map, BlockHuntConfig config) {
+    private BlockHuntWaiting(GameSpace gameSpace, ServerLevel level, BlockHuntMap map, BlockHuntConfig config) {
         this.gameSpace = gameSpace;
         thisMap = map;
         this.config = config;
-        this.world = world;
-        this.spawnLogic = new BlockHuntSpawnLogic(gameSpace, world, map);
+        this.level = level;
+        this.spawnLogic = new BlockHuntSpawnLogic(gameSpace, level, map);
     }
 
     public static GameOpenProcedure open(GameOpenContext<BlockHuntConfig> context) {
@@ -56,19 +56,19 @@ public class BlockHuntWaiting {
 
         thisMap = map;
 
-        return context.openWithWorld(map.worldConfig(), (game, world) -> {
-            BlockHuntWaiting waiting = new BlockHuntWaiting(game.getGameSpace(), world, map, context.config());
+        return context.openWithLevel(map.levelConfig(), (game, level) -> {
+            BlockHuntWaiting waiting = new BlockHuntWaiting(game.getGameSpace(), level, map, context.config());
 
             GameWaitingLobby.addTo(game, config);
 
             deniedBlockInteractions.clear();
 
             map.noInteractList().forEach((blockPos) -> {
-                deniedBlockInteractions.add(world.getBlockState((BlockPos) blockPos).getBlock());
+                deniedBlockInteractions.add(level.getBlockState((BlockPos) blockPos).getBlock());
             });
 
-            world.getServer().getBossBarManager().getAll().forEach((bossBar) -> {
-                world.getServer().getBossBarManager().remove(bossBar);
+            level.getServer().getCustomBossEvents().getEvents().forEach((bossBar) -> {
+                level.getServer().getCustomBossEvents().remove(bossBar);
             });
 
             // Game Rules
@@ -85,43 +85,43 @@ public class BlockHuntWaiting {
             game.listen(GameActivityEvents.REQUEST_START, waiting::requestStart);
             game.listen(GamePlayerEvents.ADD, waiting::addPlayer);
             game.listen(GamePlayerEvents.OFFER, JoinOffer::accept);
-            game.listen(GamePlayerEvents.ACCEPT, (offer) -> offer.teleport(world, map.spawns().containsKey("spawn_everyone") ? map.spawns().get("spawn_everyone") : map.spawns().get("spawn_hider")));
+            game.listen(GamePlayerEvents.ACCEPT, (offer) -> offer.teleport(level, map.getSpawnPos()));
             game.listen(PlayerDeathEvent.EVENT, waiting::onPlayerDeath);
 
             game.listen(BlockUseEvent.EVENT, waiting::allowInteraction);
         });
     }
 
-    private ActionResult allowInteraction(ServerPlayerEntity serverPlayerEntity, Hand hand, BlockHitResult blockHitResult) {
-        if (deniedBlockInteractions.isEmpty()) return ActionResult.SUCCESS;
-        if (world == null) return ActionResult.SUCCESS;
+    private InteractionResult allowInteraction(ServerPlayer serverPlayerEntity, InteractionHand hand, BlockHitResult blockHitResult) {
+        if (deniedBlockInteractions.isEmpty()) return InteractionResult.SUCCESS;
+        if (level == null) return InteractionResult.SUCCESS;
 
         for (Block block : deniedBlockInteractions) {
-            if (block == world.getBlockState(blockHitResult.getBlockPos()).getBlock()) {
-                return ActionResult.FAIL;
+            if (block == level.getBlockState(blockHitResult.getBlockPos()).getBlock()) {
+                return InteractionResult.FAIL;
             }
         }
 
-        return ActionResult.SUCCESS;
+        return InteractionResult.SUCCESS;
     }
 
     private GameResult requestStart() {
-        BlockHuntActive.open(this.gameSpace, this.world, thisMap, this.config);
+        BlockHuntActive.open(this.gameSpace, this.level, thisMap, this.config);
         return GameResult.ok();
     }
 
-    private void addPlayer(ServerPlayerEntity player) {
+    private void addPlayer(ServerPlayer player) {
         player.setHealth(20.0f);
         this.spawnPlayer(player);
     }
 
-    private EventResult onPlayerDeath(ServerPlayerEntity player, DamageSource source) {
+    private EventResult onPlayerDeath(ServerPlayer player, DamageSource source) {
         player.setHealth(20.0f);
         this.spawnPlayer(player);
         return EventResult.DENY;
     }
 
-    private void spawnPlayer(ServerPlayerEntity player) {
+    private void spawnPlayer(ServerPlayer player) {
         if (thisMap.spawns().entrySet().stream().noneMatch((entry) -> entry.getKey().equals("spawn_seeker")) || thisMap.spawns().entrySet().stream().noneMatch((entry) -> entry.getKey().equals("spawn_hider"))) {
             boolean noSeeker = thisMap.spawns().entrySet().stream().noneMatch((entry) -> entry.getKey().equals("spawn_seeker"));
             boolean noHider = thisMap.spawns().entrySet().stream().noneMatch((entry) -> entry.getKey().equals("spawn_hider"));
@@ -139,7 +139,7 @@ public class BlockHuntWaiting {
             warnedForSpawns = true;
         }
 
-        this.spawnLogic.resetPlayer(player, GameMode.ADVENTURE);
+        this.spawnLogic.resetPlayer(player, GameType.ADVENTURE);
         this.spawnLogic.spawnPlayer(player, null);
     }
 }

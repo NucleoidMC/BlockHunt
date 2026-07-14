@@ -1,4 +1,4 @@
-accessWidener	v2	named
+accessWidener	v2	official
 
-accessible method net/minecraft/entity/decoration/DisplayEntity$BlockDisplayEntity setBlockState (Lnet/minecraft/block/BlockState;)V
-accessible method net/minecraft/entity/decoration/DisplayEntity$BlockDisplayEntity getBlockState ()Lnet/minecraft/block/BlockState;
+accessible method net/minecraft/world/entity/Display$BlockDisplay setBlockState (Lnet/minecraft/world/level/block/state/BlockState;)V
+accessible method net/minecraft/world/entity/Display$BlockDisplay getBlockState ()Lnet/minecraft/world/level/block/state/BlockState;

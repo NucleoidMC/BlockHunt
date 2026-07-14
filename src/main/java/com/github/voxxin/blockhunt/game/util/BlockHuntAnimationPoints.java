@@ -2,13 +2,13 @@ package com.github.voxxin.blockhunt.game.util;
 
 import com.github.voxxin.blockhunt.BlockHunt;
 import com.github.voxxin.blockhunt.game.util.ext.WorldExt;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.state.property.Property;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
+import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,7 +16,7 @@ import java.util.Collection;
 
 public record BlockHuntAnimationPoints(Vec3i start, Vec3i end, boolean isAnimationPlayPoint) {
 
-    public BlockHuntAnimationPoints( Vec3i start, Vec3i end, boolean isAnimationPlayPoint) {
+    public BlockHuntAnimationPoints(Vec3i start, Vec3i end, boolean isAnimationPlayPoint) {
         //Make sure it saves the lowest most north-western point as start
         int trueStartX = Math.min(start.getX(), end.getX());
         int trueStartY = Math.min(start.getY(), end.getY());
@@ -64,14 +64,14 @@ public record BlockHuntAnimationPoints(Vec3i start, Vec3i end, boolean isAnimati
         return animationBlockState;
     }
 
-    public ActionResult applyBlocksInFrame(BlockHuntAnimationPoints animationPoint, World world) {
+    public InteractionResult applyBlocksInFrame(BlockHuntAnimationPoints animationPoint, Level level) {
         if (!Arrays.equals(animationPoint.sizeOfAnimation(), this.sizeOfAnimation())) {
             BlockHunt.LOGGER.error("Animation points are not the same size!" + " Size of AnimationPlayPoint: " + Arrays.toString(animationPoint.sizeOfAnimation()) + "  Size of Animation: " + Arrays.toString(this.sizeOfAnimation()));
-            return ActionResult.FAIL;
+            return InteractionResult.FAIL;
         }
         if (!animationPoint.isAnimationPlayPoint) {
             BlockHunt.LOGGER.error("Animation point is not a play point!");
-            return ActionResult.FAIL;
+            return InteractionResult.FAIL;
         }
         ArrayList<BlockPos> animationPointPositions = new ArrayList<>();
         ArrayList<BlockPos> thisPositions = new ArrayList<>();
@@ -96,11 +96,11 @@ public record BlockHuntAnimationPoints(Vec3i start, Vec3i end, boolean isAnimati
             int index = animationPointPositions.indexOf(blockPos);
             BlockPos relativePositionForIndex = thisPositions.get(index);
 
-            if (world.getBlockState(relativePositionForIndex).getBlock() == Blocks.STRUCTURE_VOID) return;
-            ((WorldExt)world).blockHunt$setBlockState(blockPos, world.getBlockState(relativePositionForIndex));
+            if (level.getBlockState(relativePositionForIndex).getBlock() == Blocks.STRUCTURE_VOID) return;
+            ((WorldExt)level).blockHunt$setBlockState(blockPos, level.getBlockState(relativePositionForIndex));
         });
 
 
-        return ActionResult.SUCCESS;
+        return InteractionResult.SUCCESS;
     }
 }

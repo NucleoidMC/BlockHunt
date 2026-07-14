@@ -1,13 +1,13 @@
 package com.github.voxxin.blockhunt.game.mixin;
 
 import com.github.voxxin.blockhunt.game.util.ext.WrittenBookItemExt;
-import net.minecraft.component.ComponentMap;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.WrittenBookContentComponent;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.WrittenBookItem;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.component.WrittenBookContent;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.WrittenBookItem;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import org.spongepowered.asm.mixin.Mixin;
 
 import java.util.ArrayList;
@@ -18,9 +18,9 @@ public class WrittenBookItemMixin implements WrittenBookItemExt {
     public ArrayList<String> getPages(ItemStack book) {
         ArrayList<String> pages = new ArrayList<>();
 
-        ComponentMap nbtCompound = book.getComponents();
+        DataComponentMap nbtCompound = book.getComponents();
         assert nbtCompound != null;
-        WrittenBookContentComponent rawPage = nbtCompound.get(DataComponentTypes.WRITTEN_BOOK_CONTENT);
+        WrittenBookContent rawPage = nbtCompound.get(DataComponents.WRITTEN_BOOK_CONTENT);
 
         for (int i = 0; i < rawPage.pages().size(); ++i) {
             pages.add(rawPage.pages().get(i).get(false).getString());
@@ -31,9 +31,9 @@ public class WrittenBookItemMixin implements WrittenBookItemExt {
 
     @Override
     public String getTitle(ItemStack book) {
-        ComponentMap nbtCompound = book.getComponents();
+        DataComponentMap nbtCompound = book.getComponents();
         assert nbtCompound != null;
-        WrittenBookContentComponent rawContents = nbtCompound.get(DataComponentTypes.WRITTEN_BOOK_CONTENT);
+        WrittenBookContent rawContents = nbtCompound.get(DataComponents.WRITTEN_BOOK_CONTENT);
         return rawContents.title().raw();
     }
 }

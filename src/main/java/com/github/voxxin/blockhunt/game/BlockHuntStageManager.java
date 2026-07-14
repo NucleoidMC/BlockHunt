@@ -3,13 +3,13 @@ package com.github.voxxin.blockhunt.game;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import net.minecraft.network.packet.s2c.play.PositionFlag;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.GameMode;
+import net.minecraft.world.entity.Relative;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.GameType;
 import xyz.nucleoid.plasmid.api.game.GameSpace;
 import xyz.nucleoid.plasmid.api.game.player.PlayerSet;
 
@@ -22,7 +22,7 @@ public class BlockHuntStageManager {
     public long seekersRelease = -1;
 
     public boolean seekersReleased = false;
-    private final Object2ObjectMap<ServerPlayerEntity, FrozenPlayer> frozen;
+    private final Object2ObjectMap<ServerPlayer, FrozenPlayer> frozen;
     private boolean setSpectator = false;
 
     public int[] gameTime = new int[2];
@@ -58,8 +58,8 @@ public class BlockHuntStageManager {
         if (this.seekersRelease > time) {
             seekersReleased = false;
         } else if (!seekersReleased) {
-            players.showTitle(Text.literal("")
-                            .append(Text.translatable("bossbar.blockhunt.seekers_release"))
+            players.showTitle(Component.literal("")
+                            .append(Component.translatable("bossbar.blockhunt.seekers_release"))
                     , 50);
             seekersReleased = true;
         }
@@ -68,8 +68,8 @@ public class BlockHuntStageManager {
         if (time > this.finishTime || space.getPlayers().isEmpty()) {
             if (!this.setSpectator) {
                 this.setSpectator = true;
-                for (ServerPlayerEntity player : space.getPlayers()) {
-                    player.changeGameMode(GameMode.SPECTATOR);
+                for (ServerPlayer player : space.getPlayers()) {
+                    player.setGameMode(GameType.SPECTATOR);
                 }
             }
 
@@ -85,7 +85,7 @@ public class BlockHuntStageManager {
         float sec_f = (this.startTime - time) / 20.0f;
 
         if (sec_f > 1) {
-            for (ServerPlayerEntity player : space.getPlayers()) {
+            for (ServerPlayer player : space.getPlayers()) {
                 if (player.isSpectator()) {
                     continue;
                 }
@@ -93,7 +93,7 @@ public class BlockHuntStageManager {
                 FrozenPlayer state = this.frozen.computeIfAbsent(player, p -> new FrozenPlayer());
 
                 if (state.lastPos == null) {
-                    state.lastPos = player.getPos();
+                    state.lastPos = player.position();
                 }
 
                 double destX = state.lastPos.x;
@@ -101,7 +101,7 @@ public class BlockHuntStageManager {
                 double destZ = state.lastPos.z;
 
 
-                player.networkHandler.requestTeleport(destX, destY, destZ, player.getYaw(), player.getPitch());
+                player.connection.teleport(destX, destY, destZ, player.getYRot(), player.getXRot());
             }
         }
 
@@ -111,10 +111,10 @@ public class BlockHuntStageManager {
             PlayerSet players = space.getPlayers();
 
             if (sec > 0) {
-                players.showTitle(Text.of(Integer.toString(sec)), 20);
-                players.playSound(SoundEvents.BLOCK_NOTE_BLOCK_HARP.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
+                players.showTitle(Component.nullToEmpty(Integer.toString(sec)), 20);
+                players.playSound(SoundEvents.NOTE_BLOCK_HARP.value(), SoundSource.PLAYERS, 1.0F, 1.0F);
             } else {
-                players.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BANJO.value(), SoundCategory.PLAYERS, 1.0F, 2.0F);
+                players.playSound(SoundEvents.NOTE_BLOCK_BANJO.value(), SoundSource.PLAYERS, 1.0F, 2.0F);
             }
         }
     }
@@ -130,7 +130,7 @@ public class BlockHuntStageManager {
     }
 
     public static class FrozenPlayer {
-        public Vec3d lastPos;
+        public Vec3 lastPos;
     }
 
     public enum IdleTickResult {

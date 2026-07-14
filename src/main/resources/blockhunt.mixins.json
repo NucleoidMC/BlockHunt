@@ -7,8 +7,8 @@
     "BlockDisplayEntityMixin",
     "BossBarWidgetMixin",
     "DisplayEntityMixin",
-    "ServerPlayerNetworkHandlerMixin",
-    "WorldMixin",
+    "ServerCommonPacketListenerMixin",
+    "LevelMixin",
     "WrittenBookItemMixin"
   ],
   "injectors": {
