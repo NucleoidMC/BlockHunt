@@ -1,6 +1,6 @@
 package com.github.voxxin.blockhunt.game.util.ext;
 
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 

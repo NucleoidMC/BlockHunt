@@ -3,15 +3,14 @@ package com.github.voxxin.blockhunt.game;
 import com.github.voxxin.blockhunt.BlockHunt;
 import com.github.voxxin.blockhunt.game.map.BlockHuntMap;
 import com.google.common.collect.ImmutableSet;
-import net.minecraft.network.packet.s2c.play.PositionFlag;
-import net.minecraft.scoreboard.AbstractTeam;
-import net.minecraft.scoreboard.Team;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.GameMode;
+import net.minecraft.world.entity.Relative;
+import net.minecraft.world.scores.PlayerTeam;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.GameType;
 import xyz.nucleoid.plasmid.api.game.GameSpace;
 
 import java.util.Set;
@@ -19,22 +18,22 @@ import java.util.Set;
 public class BlockHuntSpawnLogic {
     private final GameSpace gameSpace;
     private final BlockHuntMap map;
-    private final ServerWorld world;
-    private final Set<PositionFlag> flags = ImmutableSet.of();
+    private final ServerLevel level;
+    private final Set<Relative> flags = ImmutableSet.of();
 
-    public BlockHuntSpawnLogic(GameSpace gameSpace, ServerWorld world, BlockHuntMap map) {
+    public BlockHuntSpawnLogic(GameSpace gameSpace, ServerLevel level, BlockHuntMap map) {
         this.gameSpace = gameSpace;
         this.map = map;
-        this.world = world;
+        this.level = level;
     }
 
-    public void resetPlayer(ServerPlayerEntity player, GameMode gameMode) {
-        player.changeGameMode(gameMode);
-        player.setVelocity(Vec3d.ZERO);
+    public void resetPlayer(ServerPlayer player, GameType gameMode) {
+        player.setGameMode(gameMode);
+        player.setDeltaMovement(Vec3.ZERO);
         player.fallDistance = 0.0f;
     }
 
-    public void spawnPlayer(ServerPlayerEntity player, BlockHuntPlayer participant) {
+    public void spawnPlayer(ServerPlayer player, BlockHuntPlayer participant) {
         var spawns = map.spawns();
         if (spawns == null) {
             BlockHunt.LOGGER.error("Spawns are not defined!");
@@ -42,22 +41,22 @@ public class BlockHuntSpawnLogic {
         }
 
         // Determine the default spawn position
-        Vec3d spawnPos = (Vec3d) spawns.getOrDefault("spawn_everyone", spawns.get("spawn_hider"));
+        Vec3 spawnPos = (Vec3) spawns.getOrDefault("spawn_everyone", spawns.get("spawn_hider"));
         if (participant == null) {
-            player.teleport(this.world, spawnPos.x, spawnPos.y, spawnPos.z, flags, 0.0F, 0.0F, true);
+            player.teleportTo(this.level, spawnPos.x, spawnPos.y, spawnPos.z, flags, 0.0F, 0.0F, true);
             return;
         }
 
         // Determine team-specific spawn position
-        Team team = participant.getTeam();
+        PlayerTeam team = participant.getTeam();
         if (team == null) {
             BlockHunt.LOGGER.error("Cannot spawn player! Team is not defined!");
             return;
         }
 
         switch (team.getName()) {
-            case "seekers" -> spawnPos = (Vec3d) spawns.get("spawn_seeker");
-            case "hiders" -> spawnPos = (Vec3d) spawns.get("spawn_hider");
+            case "seekers" -> spawnPos = (Vec3) spawns.get("spawn_seeker");
+            case "hiders" -> spawnPos = (Vec3) spawns.get("spawn_hider");
             default -> {
                 BlockHunt.LOGGER.error("Cannot spawn player! Unknown team: " + team.getName());
                 return;
@@ -68,13 +67,13 @@ public class BlockHuntSpawnLogic {
         float radius = 4.5f;
         BlockPos safePos = null;
         for (int attempt = 0; attempt < 100; attempt++) {
-            int x = MathHelper.floor(spawnPos.x + MathHelper.nextFloat(player.getRandom(), -radius, radius));
-            int z = MathHelper.floor(spawnPos.z + MathHelper.nextFloat(player.getRandom(), -radius, radius));
-            BlockPos pos = new BlockPos(x, MathHelper.floor(spawnPos.y), z);
+            int x = Mth.floor(spawnPos.x + Mth.nextFloat(player.getRandom(), -radius, radius));
+            int z = Mth.floor(spawnPos.z + Mth.nextFloat(player.getRandom(), -radius, radius));
+            BlockPos pos = new BlockPos(x, Mth.floor(spawnPos.y), z);
 
-            if (this.world.getBlockState(pos).isAir() &&
-                    this.world.getBlockState(pos.up()).isAir() &&
-                    !this.world.getBlockState(pos.down()).isAir()) {
+            if (this.level.getBlockState(pos).isAir() &&
+                    this.level.getBlockState(pos.above()).isAir() &&
+                    !this.level.getBlockState(pos.below()).isAir()) {
                 safePos = pos;
                 break;
             }
@@ -87,10 +86,10 @@ public class BlockHuntSpawnLogic {
 
         // Adjust position for finer placement
         float newRadius = 0.25f;
-        float xPos = safePos.getX() + 0.5f + MathHelper.nextFloat(player.getRandom(), -newRadius, newRadius);
-        float zPos = safePos.getZ() + 0.5f + MathHelper.nextFloat(player.getRandom(), -newRadius, newRadius);
+        float xPos = safePos.getX() + 0.5f + Mth.nextFloat(player.getRandom(), -newRadius, newRadius);
+        float zPos = safePos.getZ() + 0.5f + Mth.nextFloat(player.getRandom(), -newRadius, newRadius);
 
         // Teleport player
-        player.teleport(this.world, xPos, safePos.getY(), zPos, flags, 0.0F, 0.0F, true);
+        player.teleportTo(this.level, xPos, safePos.getY(), zPos, flags, 0.0F, 0.0F, true);
     }
 }

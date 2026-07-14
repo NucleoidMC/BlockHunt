@@ -4,24 +4,24 @@ import com.github.voxxin.blockhunt.BlockHunt;
 import com.github.voxxin.blockhunt.game.BlockHuntConfig;
 import com.github.voxxin.blockhunt.game.util.BlockHuntAnimation;
 import com.github.voxxin.blockhunt.game.util.BlockHuntAnimationPoints;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.resources.Identifier;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.Difficulty;
-import net.minecraft.world.GameRules;
-import xyz.nucleoid.fantasy.RuntimeWorldConfig;
+import net.minecraft.world.level.gamerules.GameRules;
+import xyz.nucleoid.fantasy.RuntimeLevelConfig;
 import xyz.nucleoid.map_templates.MapTemplateSerializer;
 import xyz.nucleoid.plasmid.api.game.GameOpenContext;
-import xyz.nucleoid.plasmid.api.game.world.generator.TemplateChunkGenerator;
+import xyz.nucleoid.plasmid.api.game.level.generator.TemplateChunkGenerator;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public record BlockHuntMap(Map<String, Vec3d> spawns, ArrayList<Object> noInteractList,
-                           ArrayList<Object> allowedDisguises, ArrayList<BlockHuntAnimation> animations, RuntimeWorldConfig worldConfig) {
-    public Vec3d getSpawnPos() {
+public record BlockHuntMap(Map<String, Vec3> spawns, ArrayList<Object> noInteractList,
+                           ArrayList<Object> allowedDisguises, ArrayList<BlockHuntAnimation> animations, RuntimeLevelConfig levelConfig) {
+    public Vec3 getSpawnPos() {
         return this.spawns().getOrDefault("spawn_everyone", this.spawns().get("spawn_hider"));
     }
     
@@ -32,25 +32,25 @@ public record BlockHuntMap(Map<String, Vec3d> spawns, ArrayList<Object> noIntera
         var template = MapTemplateSerializer.loadFromResource(server, config.mapConfig().id());
         var metadata = template.getMetadata();
 
-        var worldConfig = new RuntimeWorldConfig().setGenerator(new TemplateChunkGenerator(server, template))
-                .setGameRule(GameRules.DO_FIRE_TICK, false)
+        var levelConfig = new RuntimeLevelConfig().setGenerator(new TemplateChunkGenerator(server, template))
+                .setGameRule(GameRules.FIRE_SPREAD_RADIUS_AROUND_PLAYER, 0)
                 .setGameRule(GameRules.FIRE_DAMAGE, false)
                 .setGameRule(GameRules.FREEZE_DAMAGE, false)
-                .setGameRule(GameRules.DO_MOB_GRIEFING, false)
-                .setGameRule(GameRules.DO_MOB_SPAWNING, false)
+                .setGameRule(GameRules.MOB_GRIEFING, false)
+                .setGameRule(GameRules.SPAWN_MOBS, false)
                 .setGameRule(GameRules.RANDOM_TICK_SPEED, 0)
                 .setGameRule(GameRules.WATER_SOURCE_CONVERSION, false)
                 .setGameRule(GameRules.LAVA_SOURCE_CONVERSION, false)
-                .setGameRule(GameRules.DO_WEATHER_CYCLE, false)
-                .setGameRule(GameRules.DO_DAYLIGHT_CYCLE, false)
+                .setGameRule(GameRules.ADVANCE_WEATHER, false)
+                .setGameRule(GameRules.ADVANCE_TIME, false)
                 .setGameRule(GameRules.SHOW_DEATH_MESSAGES, false)
-                .setGameRule(GameRules.NATURAL_REGENERATION, false)
+                .setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, false)
                 .setDifficulty(Difficulty.HARD);
 
         var noInteractList = new ArrayList<>();
         var allowedDisguises = new ArrayList<>();
         ArrayList<BlockHuntAnimation> animations = new ArrayList<>();
-        Map<String, Vec3d> spawns = new HashMap<>();
+        Map<String, Vec3> spawns = new HashMap<>();
 
 
         metadata.getRegions().forEach((region) -> {
@@ -61,8 +61,8 @@ public record BlockHuntMap(Map<String, Vec3d> spawns, ArrayList<Object> noIntera
                     BlockPos max = region.getBounds().max();
                     int lowestY = Math.min(max.getY(), min.getY());
 
-                    Vec3d tempPos = region.getBounds().center();
-                    spawns.put("spawn_hider", new Vec3d(tempPos.getX(), lowestY, tempPos.getZ()));
+                    Vec3 tempPos = region.getBounds().center();
+                    spawns.put("spawn_hider", new Vec3(tempPos.x(), lowestY, tempPos.z()));
                 }
                 case "spawn_seeker" -> {
                     System.out.println("spawn_seeker");
@@ -70,8 +70,8 @@ public record BlockHuntMap(Map<String, Vec3d> spawns, ArrayList<Object> noIntera
                     BlockPos max = region.getBounds().max();
                     int lowestY = Math.min(max.getY(), min.getY());
 
-                    Vec3d tempPos = region.getBounds().center();
-                    spawns.put("spawn_seeker", new Vec3d(tempPos.getX(), lowestY, tempPos.getZ()));
+                    Vec3 tempPos = region.getBounds().center();
+                    spawns.put("spawn_seeker", new Vec3(tempPos.x(), lowestY, tempPos.z()));
                 }
                 case "spawn_everyone" -> {
                     System.out.println("spawn_everyone");
@@ -79,8 +79,8 @@ public record BlockHuntMap(Map<String, Vec3d> spawns, ArrayList<Object> noIntera
                     BlockPos max = region.getBounds().max();
                     int lowestY = Math.min(max.getY(), min.getY());
 
-                    Vec3d tempPos = region.getBounds().center();
-                    spawns.put("spawn_everyone", new Vec3d(tempPos.getX(), lowestY, tempPos.getZ()));
+                    Vec3 tempPos = region.getBounds().center();
+                    spawns.put("spawn_everyone", new Vec3(tempPos.x(), lowestY, tempPos.z()));
                 }
                 case "map_no_interact" -> {
                     BlockPos min = region.getBounds().min();
@@ -117,7 +117,7 @@ public record BlockHuntMap(Map<String, Vec3d> spawns, ArrayList<Object> noIntera
                 }
 
                 BlockHuntAnimation newAnimation =
-                        new BlockHuntAnimation(Identifier.of(config.mapConfig().id().getNamespace(), animationParts[0]),
+                        new BlockHuntAnimation(Identifier.fromNamespaceAndPath(config.mapConfig().id().getNamespace(), animationParts[0]),
                         animationParts[1].contains("play") ?
                                 new BlockHuntAnimationPoints(region.getBounds().min(), region.getBounds().max(), true) : null,
                         animationParts[1].contains("settings") ? region.getBounds().max() : null);
@@ -157,6 +157,6 @@ public record BlockHuntMap(Map<String, Vec3d> spawns, ArrayList<Object> noIntera
             }
         });
 
-        return new BlockHuntMap(spawns, noInteractList, allowedDisguises, animations, worldConfig);
+        return new BlockHuntMap(spawns, noInteractList, allowedDisguises, animations, levelConfig);
     }
 }

@@ -2,15 +2,12 @@ package com.github.voxxin.blockhunt.game.util;
 
 import com.github.voxxin.blockhunt.BlockHunt;
 import com.github.voxxin.blockhunt.game.util.ext.WrittenBookItemExt;
-import net.minecraft.block.entity.LecternBlockEntity;
-import net.minecraft.client.gui.screen.ingame.BookScreen;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.item.WrittenBookItem;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.entity.LecternBlockEntity;
+import net.minecraft.world.item.WrittenBookItem;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.resources.Identifier;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -21,7 +18,7 @@ public class BlockHuntAnimation {
     public final Identifier animationName;
     private ArrayList<BlockHuntAnimationPoints> frames = new ArrayList<>();
     private BlockHuntAnimationPoints animationPlayPoint;
-    private World world;
+    private Level level;
     public Settings settings;
     private boolean finishedAnimation = false;
     private int ticks = 0;
@@ -43,8 +40,8 @@ public class BlockHuntAnimation {
         this.settings = new Settings(this.animationName, settingsPoint, null);
     }
 
-    public void setWorld(World world) {
-        this.world = world;
+    public void setLevel(Level level) {
+        this.level = level;
     }
 
     public void setFrame(BlockHuntAnimationPoints frame, int index) {
@@ -57,14 +54,14 @@ public class BlockHuntAnimation {
     }
 
     private void nextFrame() {
-        if (this.world == null) return;
+        if (this.level == null) return;
         if (frames.size() == 0) {
             BlockHunt.LOGGER.error("No frames were added to animation " + animationName + ". Will be forever skipping this animation.");
             finishedAnimation = true;
             return;
         }
-        ActionResult returnVal = frames.get(animationIndex).applyBlocksInFrame(animationPlayPoint, world);
-        if (!returnVal.isAccepted()) BlockHunt.LOGGER.error("Failed to apply animation frame " + animationIndex + " of animation " + animationName
+        InteractionResult returnVal = frames.get(animationIndex).applyBlocksInFrame(animationPlayPoint, level);
+        if (!returnVal.consumesAction()) BlockHunt.LOGGER.error("Failed to apply animation frame " + animationIndex + " of animation " + animationName
                 + "\n" + " Will be skipping this frame.");
 
         if (settings.loop && animationIndex == frames.size() - 1) {animationIndex = 0; return;}
@@ -75,7 +72,7 @@ public class BlockHuntAnimation {
 
     public void tick(float startTick, float gameTick) {
         settings.tick();
-        settings.setWorld(world);
+        settings.setLevel(level);
         if ((settings.startTime + startTick) > gameTick) return;
         if (finishedAnimation) return;
         if (animationPlayPoint == null) return;
@@ -90,7 +87,7 @@ public class BlockHuntAnimation {
     public static class Settings {
         private final Identifier animationName;
         private final BlockPos settingsPoint;
-        private World world;
+        private Level level;
         private boolean loop = false;
         private double fps = 1;
 
@@ -98,28 +95,28 @@ public class BlockHuntAnimation {
 
         private boolean parsedValues = false;
 
-        public Settings(Identifier animationName, BlockPos settingsPoint, @Nullable World world) {
+        public Settings(Identifier animationName, BlockPos settingsPoint, @Nullable Level level) {
             this.animationName = animationName;
             this.settingsPoint = settingsPoint;
-            this.world = world;
+            this.level = level;
             parseValues();
         }
 
-        public void setWorld(World world) {
-            this.world = world;
+        public void setLevel(Level world) {
+            this.level = world;
         }
 
         public void tick() {
-            if (world != null && !parsedValues) {
+            if (level != null && !parsedValues) {
                 parseValues();
             }
         }
 
         private void parseValues() {
-            if (world != null && settingsPoint != null) {
+            if (level != null && settingsPoint != null) {
                 parsedValues = true;
 
-                LecternBlockEntity lectern = (LecternBlockEntity) world.getBlockEntity(settingsPoint);
+                LecternBlockEntity lectern = (LecternBlockEntity) level.getBlockEntity(settingsPoint);
                 if (lectern == null) {
                     BlockHunt.LOGGER.error("Settings could not be created, since no lectern was found at position " + settingsPoint);
                     return;

@@ -1,12 +1,12 @@
 package com.github.voxxin.blockhunt.game.mixin;
 
 import com.github.voxxin.blockhunt.game.util.ext.DisplayEntityExt;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.decoration.DisplayEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.Display;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(DisplayEntity.BlockDisplayEntity.class)
+@Mixin(Display.BlockDisplay.class)
 public abstract class DisplayEntityMixin implements DisplayEntityExt {
 
 

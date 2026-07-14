@@ -3,60 +3,54 @@ package com.github.voxxin.blockhunt.game;
 import com.github.voxxin.blockhunt.game.util.BlockHuntBlock;
 import com.github.voxxin.blockhunt.game.util.BlockHuntBossBar;
 import com.github.voxxin.blockhunt.game.util.BlockHuntTitle;
-import it.unimi.dsi.fastutil.objects.ReferenceSet;
-import it.unimi.dsi.fastutil.objects.ReferenceSets;
 import it.unimi.dsi.fastutil.objects.ReferenceSortedSets;
-import net.minecraft.block.Block;
-import net.minecraft.component.ComponentType;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.TooltipDisplayComponent;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.scoreboard.Team;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.component.TooltipDisplay;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.scores.PlayerTeam;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Unit;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
-import xyz.nucleoid.plasmid.api.game.common.GlobalWidgets;
 import xyz.nucleoid.plasmid.api.util.PlayerRef;
 
-import java.util.SequencedSet;
-
 public class BlockHuntPlayer {
-    private final ServerWorld world;
+    private final ServerLevel level;
     private final PlayerRef playerRef;
-    private final ServerPlayerEntity player;
+    private final ServerPlayer player;
     private BlockHuntBossBar.HideTimeBossbar bossBar;
-    private Team team = null;
+    private PlayerTeam team = null;
     private Object[] disguise = new Object[2];
     private boolean isHidden;
-    public Vec3d lastPosition;
+    public Vec3 lastPosition;
     public int respawnTicks = 0;
     private BlockPos positionHidden = null;
     public BlockPos prevBlockhitResult;
 
     public int lastRealSecond = 0;
 
-    public BlockHuntPlayer(ServerWorld world, PlayerRef player) {
-        this.world = world;
+    public BlockHuntPlayer(ServerLevel level, PlayerRef player) {
+        this.level = level;
         this.playerRef = player;
-        this.player = player.getEntity(world);
+        this.player = player.getEntity(level);
     }
 
-    public void setTeam(Team team) {
-        world.getScoreboard().addScoreHolderToTeam(player.getNameForScoreboard(), team);
+    public void setTeam(PlayerTeam team) {
+        level.getScoreboard().addPlayerToTeam(player.getScoreboardName(), team);
         this.team = team;
     }
 
-    public Team getTeam() {
+    public PlayerTeam getTeam() {
         return this.team;
     }
 
@@ -69,7 +63,7 @@ public class BlockHuntPlayer {
     public void setDisguise(Block block) {
         if (this.disguise == null) return;
         BlockHuntBlock disguiseEntity = (BlockHuntBlock) this.disguise[0];
-        disguiseEntity.setBlockState(block.getDefaultState());
+        disguiseEntity.setBlockState(block.defaultBlockState());
 
         this.disguise = new Object[]{disguiseEntity, block};
     }
@@ -79,7 +73,7 @@ public class BlockHuntPlayer {
     }
 
     public void resetDisguise() {
-        if (this.disguise[0] != null) ((BlockHuntBlock) this.disguise[0]).kill(world);
+        if (this.disguise[0] != null) ((BlockHuntBlock) this.disguise[0]).kill(level);
         this.disguise = new Object[]{null, null};
     }
 
@@ -92,7 +86,7 @@ public class BlockHuntPlayer {
     }
 
     public void setHidden(boolean isHidden) {
-        if (isHidden) positionHidden = player.getBlockPos();
+        if (isHidden) positionHidden = player.blockPosition();
         else positionHidden = null;
 
         this.isHidden = isHidden;
@@ -133,59 +127,59 @@ public class BlockHuntPlayer {
 
         switch (team.getName()) {
             case "seekers" -> {
-                this.player.clearStatusEffects();
-                this.player.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, StatusEffectInstance.INFINITE, 0, false, false));
+                this.player.removeAllEffects();
+                this.player.addEffect(new MobEffectInstance(MobEffects.SPEED, MobEffectInstance.INFINITE_DURATION, 0, false, false));
 
-                this.player.getInventory().clear();
-                this.player.getInventory().setStack(0, new ItemStack(Items.IRON_SWORD));
-                this.player.equipStack(EquipmentSlot.FEET, itemWName(Items.CHAINMAIL_BOOTS, Text.of("§f§lHeavy Boots")));
-                this.player.equipStack(EquipmentSlot.LEGS, itemWName(Items.CHAINMAIL_LEGGINGS, Text.of("§f§lHeavy Pants")));
-                this.player.equipStack(EquipmentSlot.CHEST, itemWName(Items.CHAINMAIL_CHESTPLATE, Text.of("§f§lHeavy Chestplate")));
-                this.player.equipStack(EquipmentSlot.HEAD, itemWName(Items.CHAINMAIL_HELMET, Text.of("§f§lHeavy Helmet")));
+                this.player.getInventory().clearContent();
+                this.player.getInventory().setItem(0, new ItemStack(Items.IRON_SWORD));
+                this.player.setItemSlot(EquipmentSlot.FEET, itemWName(Items.CHAINMAIL_BOOTS, Component.nullToEmpty("§f§lHeavy Boots")));
+                this.player.setItemSlot(EquipmentSlot.LEGS, itemWName(Items.CHAINMAIL_LEGGINGS, Component.nullToEmpty("§f§lHeavy Pants")));
+                this.player.setItemSlot(EquipmentSlot.CHEST, itemWName(Items.CHAINMAIL_CHESTPLATE, Component.nullToEmpty("§f§lHeavy Chestplate")));
+                this.player.setItemSlot(EquipmentSlot.HEAD, itemWName(Items.CHAINMAIL_HELMET, Component.nullToEmpty("§f§lHeavy Helmet")));
             }
             case "hiders" -> {
-                this.player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, StatusEffectInstance.INFINITE, 2, false, false));
-                this.player.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, StatusEffectInstance.INFINITE, 0, false, false));
+                this.player.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, MobEffectInstance.INFINITE_DURATION, 2, false, false));
+                this.player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, MobEffectInstance.INFINITE_DURATION, 0, false, false));
 
 
-                this.player.getInventory().clear();
-                this.player.getInventory().setStack(0, new ItemStack(Items.STONE_SWORD));
-                this.player.equipStack(EquipmentSlot.FEET, itemWName(Items.LEATHER_BOOTS, Text.of("§f§lSneaky Boots")));
-                this.player.equipStack(EquipmentSlot.LEGS, itemWName(Items.LEATHER_LEGGINGS, Text.of("§f§lSneaky Pants")));
-                this.player.equipStack(EquipmentSlot.CHEST, itemWName(Items.LEATHER_CHESTPLATE, Text.of("§f§lSneaky Chestplate")));
-                this.player.equipStack(EquipmentSlot.HEAD, itemWName(Items.LEATHER_HELMET, Text.of("§f§lSneaky Helmet")));
+                this.player.getInventory().clearContent();
+                this.player.getInventory().setItem(0, new ItemStack(Items.STONE_SWORD));
+                this.player.setItemSlot(EquipmentSlot.FEET, itemWName(Items.LEATHER_BOOTS, Component.nullToEmpty("§f§lSneaky Boots")));
+                this.player.setItemSlot(EquipmentSlot.LEGS, itemWName(Items.LEATHER_LEGGINGS, Component.nullToEmpty("§f§lSneaky Pants")));
+                this.player.setItemSlot(EquipmentSlot.CHEST, itemWName(Items.LEATHER_CHESTPLATE, Component.nullToEmpty("§f§lSneaky Chestplate")));
+                this.player.setItemSlot(EquipmentSlot.HEAD, itemWName(Items.LEATHER_HELMET, Component.nullToEmpty("§f§lSneaky Helmet")));
             }
         }
 
-        for (ItemStack item : this.player.getInventory().getMainStacks()) {
-            item.set(DataComponentTypes.UNBREAKABLE, Unit.INSTANCE);
-            item.set(DataComponentTypes.TOOLTIP_DISPLAY, new TooltipDisplayComponent(true, ReferenceSortedSets.emptySet()));
+        for (ItemStack item : this.player.getInventory().getNonEquipmentItems()) {
+            item.set(DataComponents.UNBREAKABLE, Unit.INSTANCE);
+            item.set(DataComponents.TOOLTIP_DISPLAY, new TooltipDisplay(true, ReferenceSortedSets.emptySet()));
         }
 
         for (var slot : EquipmentSlot.values()) {
-            var item = this.player.getEquippedStack(slot);
-            item.set(DataComponentTypes.UNBREAKABLE, Unit.INSTANCE);
-            item.set(DataComponentTypes.TOOLTIP_DISPLAY, new TooltipDisplayComponent(true, ReferenceSortedSets.emptySet()));
+            var item = this.player.getItemBySlot(slot);
+            item.set(DataComponents.UNBREAKABLE, Unit.INSTANCE);
+            item.set(DataComponents.TOOLTIP_DISPLAY, new TooltipDisplay(true, ReferenceSortedSets.emptySet()));
         }
     }
 
-    private ItemStack itemWName(Item stack, Text text) {
+    private ItemStack itemWName(Item stack, Component text) {
         ItemStack itemStack = new ItemStack(stack);
-        itemStack.set(DataComponentTypes.ITEM_NAME, text);
+        itemStack.set(DataComponents.ITEM_NAME, text);
         return itemStack;
     }
 
     public void playerDeath() {
         BlockHuntTitle.sendTitle(this.player,
-                Text.literal("")
+                Component.literal("")
                 .append(
-                        Text.translatable("event.blockhunt.death")
-                                .formatted(Formatting.RED)
+                        Component.translatable("event.blockhunt.death")
+                                .withStyle(ChatFormatting.RED)
                 ),
-                Text.literal("")
+                Component.literal("")
                         .append(
-                        Text.translatable("event.blockhunt.death_time", 5)
-                                .formatted(Formatting.GRAY)
+                        Component.translatable("event.blockhunt.death_time", 5)
+                                .withStyle(ChatFormatting.GRAY)
                         ),
                 0, 0, 0
         );
