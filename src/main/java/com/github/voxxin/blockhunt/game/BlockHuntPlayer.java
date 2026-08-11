@@ -33,6 +33,7 @@ public class BlockHuntPlayer {
     private PlayerTeam team = null;
     private Object[] disguise = new Object[2];
     private boolean isHidden;
+    private int timeToHide;
     public Vec3 lastPosition;
     public int respawnTicks = 0;
     private BlockPos positionHidden = null;
@@ -40,10 +41,11 @@ public class BlockHuntPlayer {
 
     public int lastRealSecond = 0;
 
-    public BlockHuntPlayer(ServerLevel level, PlayerRef player) {
+    public BlockHuntPlayer(ServerLevel level, PlayerRef player, int timeToHide) {
         this.level = level;
         this.playerRef = player;
         this.player = player.getEntity(level);
+        this.timeToHide = timeToHide;
     }
 
     public void setTeam(PlayerTeam team) {
@@ -111,7 +113,7 @@ public class BlockHuntPlayer {
 
     public void updateTimeBar(@Nullable Boolean moved) {
         if (this.bossBar == null) {
-            this.bossBar = new BlockHuntBossBar.HideTimeBossbar();
+            this.bossBar = new BlockHuntBossBar.HideTimeBossbar(timeToHide);
             this.bossBar.addPlayer(this.player);
         } else {
             if (moved != null) this.bossBar.update(moved);

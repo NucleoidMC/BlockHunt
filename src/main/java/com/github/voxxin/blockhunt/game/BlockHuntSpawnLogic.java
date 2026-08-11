@@ -64,7 +64,7 @@ public class BlockHuntSpawnLogic {
         }
 
         // Find a safe position
-        float radius = 4.5f;
+        float radius = map.spawnRadius();
         BlockPos safePos = null;
         for (int attempt = 0; attempt < 100; attempt++) {
             int x = Mth.floor(spawnPos.x + Mth.nextFloat(player.getRandom(), -radius, radius));

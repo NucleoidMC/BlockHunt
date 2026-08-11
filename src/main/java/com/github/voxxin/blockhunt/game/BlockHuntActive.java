@@ -79,7 +79,7 @@ public class BlockHuntActive {
         this.level = level;
 
         for (PlayerRef player : participants) {
-            this.participants.put(player, new BlockHuntPlayer(level, player));
+            this.participants.put(player, new BlockHuntPlayer(level, player, config.hiderSolidifyTime()));
         }
 
         this.stageManager = new BlockHuntStageManager();
