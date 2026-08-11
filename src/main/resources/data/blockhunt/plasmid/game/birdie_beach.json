@@ -1,0 +1,7 @@
+{
+  "type": "blockhunt:blockhunt",
+  "icon": "minecraft:sand",
+  "map": {
+    "id": "blockhunt:birdie_beach"
+  }
+}

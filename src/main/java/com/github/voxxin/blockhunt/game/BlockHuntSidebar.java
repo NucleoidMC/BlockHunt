@@ -19,7 +19,7 @@ public class BlockHuntSidebar {
     private final Level level;
     private final BlockHuntStageManager stageManager;
     public BlockHuntSidebar(GlobalWidgets widgets, Identifier map_name, Level level, BlockHuntStageManager stageManager) {
-        this.sidebar = widgets.addSidebar(Component.translatable("gameType.blockhunt.standard").withStyle(ChatFormatting.GOLD));
+        this.sidebar = widgets.addSidebar(Component.translatable("gameType.blockhunt.blockhunt").withStyle(ChatFormatting.GOLD));
         this.sidebar.setDefaultNumberFormat(BlankFormat.INSTANCE);
         this.level = level;
         this.stageManager = stageManager;
