@@ -14,6 +14,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
@@ -66,6 +67,14 @@ public class BlockHuntPlayer {
         disguiseEntity.setBlockState(block.defaultBlockState());
 
         this.disguise = new Object[]{disguiseEntity, block};
+    }
+
+    public void setDisguise(BlockState block) {
+        if (this.disguise == null) return;
+        BlockHuntBlock disguiseEntity = (BlockHuntBlock) this.disguise[0];
+        disguiseEntity.setBlockState(block);
+
+        this.disguise = new Object[]{disguiseEntity, block.getBlock()};
     }
 
     public void setDisguise(BlockHuntBlock disguise, Block block) {
