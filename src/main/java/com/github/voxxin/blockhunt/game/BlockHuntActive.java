@@ -12,6 +12,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.scores.Team;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.server.level.ServerPlayer;
@@ -78,7 +79,7 @@ public class BlockHuntActive {
         this.level = level;
 
         for (PlayerRef player : participants) {
-            this.participants.put(player, new BlockHuntPlayer(level, player));
+            this.participants.put(player, new BlockHuntPlayer(level, player, config.hiderSolidifyTime()));
         }
 
         this.stageManager = new BlockHuntStageManager();
@@ -228,7 +229,7 @@ public class BlockHuntActive {
 
                 return InteractionResult.SUCCESS;
             } else if (block == clickedBlock && serverPlayerEntity.isAlliedTo(hidersTeam) && player.getDisguiseB() != clickedBlock && !isSameBlock) {
-                player.setDisguise(clickedBlock);
+                player.setDisguise(level.getBlockState(blockHitResult.getBlockPos()));
                 player.updateTimeBar(true);
 
                 serverPlayerEntity.sendSystemMessage(

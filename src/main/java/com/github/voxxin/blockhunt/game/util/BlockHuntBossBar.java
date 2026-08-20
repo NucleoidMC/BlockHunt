@@ -27,13 +27,13 @@ public class BlockHuntBossBar extends CustomBossEvent {
     public static class HideTimeBossbar extends CustomBossEvent {
         private final ServerBossEvent widget;
         private float timeUntilHidden = 1F;
-
+        private int timeToHide;
         private boolean hidden = false;
 
-        public HideTimeBossbar() {
+        public HideTimeBossbar(int timeToHide) {
             UUID uuid = UUID.randomUUID();
             super(uuid, Identifier.fromNamespaceAndPath("blockhunt", "blockhunt.bossbar.not_hidden"), Component.translatable("blockhunt.bossbar.not_hidden"), () -> {});
-
+            this.timeToHide = timeToHide;
             Component bossbarTitle = Component.literal("")
                     .append(Component.translatable("bossbar.blockhunt.not_hidden",
                                             Component.literal(String.valueOf(this.timeUntilHidden)).withStyle(ChatFormatting.YELLOW)
@@ -51,7 +51,7 @@ public class BlockHuntBossBar extends CustomBossEvent {
             if (moved) {
                 this.timeUntilHidden = 1F;
             } else if (timeUntilHidden > 0) {
-                this.timeUntilHidden -= 0.05F;
+                this.timeUntilHidden -= (20F / timeToHide);
             }
 
             if (this.timeUntilHidden > 0F) {

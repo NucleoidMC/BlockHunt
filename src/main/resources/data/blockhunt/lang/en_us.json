@@ -2,6 +2,7 @@
   "gameType.blockhunt.blockhunt": "Block Hunt",
 
   "game.blockhunt.fort_du_perdu": "Block Hunt: Fort du perdu",
+  "game.blockhunt.birdie_beach": "Block Hunt: Birdie Beach",
 
   "event.blockhunt.block_changed": "You are now disguised as a %s!",
   "event.blockhunt.already_block": "You are already a %s!",

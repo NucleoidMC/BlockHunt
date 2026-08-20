@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public record BlockHuntMap(Map<String, Vec3> spawns, ArrayList<Object> noInteractList,
+public record BlockHuntMap(Map<String, Vec3> spawns, float spawnRadius, ArrayList<Object> noInteractList,
                            ArrayList<Object> allowedDisguises, ArrayList<BlockHuntAnimation> animations, RuntimeLevelConfig levelConfig) {
     public Vec3 getSpawnPos() {
         return this.spawns().getOrDefault("spawn_everyone", this.spawns().get("spawn_hider"));
@@ -157,6 +157,6 @@ public record BlockHuntMap(Map<String, Vec3> spawns, ArrayList<Object> noInterac
             }
         });
 
-        return new BlockHuntMap(spawns, noInteractList, allowedDisguises, animations, levelConfig);
+        return new BlockHuntMap(spawns, config.mapConfig().spawnRadius(), noInteractList, allowedDisguises, animations, levelConfig);
     }
 }

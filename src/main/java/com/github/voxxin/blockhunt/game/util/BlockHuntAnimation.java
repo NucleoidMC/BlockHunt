@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class BlockHuntAnimation {
-    private static int animationIndex = 0;
+    private int animationIndex = 0;
     public final Identifier animationName;
     private ArrayList<BlockHuntAnimationPoints> frames = new ArrayList<>();
     private BlockHuntAnimationPoints animationPlayPoint;

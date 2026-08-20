@@ -1,0 +1,9 @@
+{
+  "type": "blockhunt:blockhunt",
+  "icon": "minecraft:sand",
+  "map": {
+    "id": "blockhunt:birdie_beach",
+    "spawn_radius": 0
+  },
+  "hider_solidify_time": 300
+}
