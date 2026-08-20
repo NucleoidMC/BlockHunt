@@ -34,7 +34,7 @@ public class BlockHuntStageManager {
     public void onOpen(long time, BlockHuntConfig config, long seekerRelease) {
         this.startTime = timeCalc(time, 0, 3);
         this.seekersRelease = seekerRelease + this.startTime;
-        this.finishTime = config.endTime();
+        this.finishTime = time + config.endTime();
     }
 
     public IdleTickResult tick(long time, GameSpace space) {
