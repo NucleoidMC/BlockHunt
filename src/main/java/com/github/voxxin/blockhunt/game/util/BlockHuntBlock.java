@@ -16,7 +16,7 @@ public class BlockHuntBlock extends Display.BlockDisplay {
     public BlockHuntBlock(EntityType<?> entityType, Level level) {
         super(entityType, level);
         this.setNoGravity(true);
-        this.setInvulnerable(true);
+        this.setPermanentlyInvulnerable(true);
         this.setPosRotInterpolationDuration(1);
     }
 
