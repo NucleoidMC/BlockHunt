@@ -38,17 +38,17 @@ public class BlockHuntSidebar {
         String gameTime = String.format("%d:%02d", totalGameSeconds / 60, totalGameSeconds % 60);
 
         lines.clear();
-        lines.add(SidebarLine.create(0, Component.literal("")));
-        lines.add(SidebarLine.create(1, Component.literal("").append(Component.translatable("sidebar.blockhunt.map_name", Component.literal(mapName).withStyle(ChatFormatting.AQUA)))));
-        lines.add(SidebarLine.create(2, Component.literal("")));
-        lines.add(SidebarLine.create(3, Component.literal("").append(Component.translatable("sidebar.blockhunt.hider_count", Component.literal(String.valueOf(hiderCount)).withStyle(ChatFormatting.GREEN)))));
-        lines.add(SidebarLine.create(4, Component.literal("")));
-        lines.add(SidebarLine.create(5, Component.literal("").append(Component.translatable("sidebar.blockhunt.seeker_count", Component.literal(String.valueOf(seekerCount)).withStyle(ChatFormatting.GREEN)))));
-        lines.add(SidebarLine.create(7, Component.literal("")));
-        lines.add(SidebarLine.create(8, Component.literal("").append(Component.translatable("sidebar.blockhunt.game_time", Component.literal(gameTime).withStyle(ChatFormatting.GREEN)))));
-        lines.add(SidebarLine.create(9, Component.literal("")));
-        lines.add(SidebarLine.create(10, Component.literal("").append(Component.translatable("sidebar.blockhunt.seeker_countdown", Component.literal(seekersRelease).withStyle(ChatFormatting.GREEN)))));
-        lines.add(SidebarLine.create(11, Component.literal("")));
+        lines.add(SidebarLine.createEmpty(0));
+        lines.add(SidebarLine.create(1, Component.literal("").append(Component.translatable("sidebar.blockhunt.map_name", Component.literal(mapName).withStyle(ChatFormatting.AQUA))), BlankFormat.INSTANCE));
+        lines.add(SidebarLine.createEmpty(2));
+        lines.add(SidebarLine.create(3, Component.literal("").append(Component.translatable("sidebar.blockhunt.hider_count", Component.literal(String.valueOf(hiderCount)).withStyle(ChatFormatting.GREEN))), BlankFormat.INSTANCE));
+        lines.add(SidebarLine.createEmpty(4));
+        lines.add(SidebarLine.create(5, Component.literal("").append(Component.translatable("sidebar.blockhunt.seeker_count", Component.literal(String.valueOf(seekerCount)).withStyle(ChatFormatting.GREEN))), BlankFormat.INSTANCE));
+        lines.add(SidebarLine.createEmpty(7));
+        lines.add(SidebarLine.create(8, Component.literal("").append(Component.translatable("sidebar.blockhunt.game_time", Component.literal(gameTime).withStyle(ChatFormatting.GREEN))), BlankFormat.INSTANCE));
+        lines.add(SidebarLine.createEmpty(9));
+        lines.add(SidebarLine.create(10, Component.literal("").append(Component.translatable("sidebar.blockhunt.seeker_countdown", Component.literal(seekersRelease).withStyle(ChatFormatting.GREEN))), BlankFormat.INSTANCE));
+        lines.add(SidebarLine.createEmpty(11));
 
         for (SidebarLine line : lines) {
             this.sidebar.setLine(line);
@@ -66,9 +66,9 @@ public class BlockHuntSidebar {
 
         this.level.players().forEach(playerEntity -> sidebar.addPlayer((ServerPlayer) playerEntity));
 
-        lines.set(3, SidebarLine.create(3, Component.literal("").append(Component.translatable("sidebar.blockhunt.hider_count", Component.literal(String.valueOf(this.level.getScoreboard().getPlayerTeam("hiders").getPlayers().size())).withStyle(ChatFormatting.GREEN)))));
-        lines.set(5, SidebarLine.create(5, Component.literal("").append(Component.translatable("sidebar.blockhunt.seeker_count", Component.literal(String.valueOf(this.level.getScoreboard().getPlayerTeam("seekers").getPlayers().size())).withStyle(ChatFormatting.GREEN)))));
-        lines.set(8, SidebarLine.create(8, Component.literal("").append(Component.translatable("sidebar.blockhunt.game_time", Component.literal(formattedGameTime).withStyle(ChatFormatting.GREEN)))));
+        lines.set(3, SidebarLine.create(3, Component.literal("").append(Component.translatable("sidebar.blockhunt.hider_count", Component.literal(String.valueOf(this.level.getScoreboard().getPlayerTeam("hiders").getPlayers().size())).withStyle(ChatFormatting.GREEN))), BlankFormat.INSTANCE));
+        lines.set(5, SidebarLine.create(5, Component.literal("").append(Component.translatable("sidebar.blockhunt.seeker_count", Component.literal(String.valueOf(this.level.getScoreboard().getPlayerTeam("seekers").getPlayers().size())).withStyle(ChatFormatting.GREEN))), BlankFormat.INSTANCE));
+        lines.set(8, SidebarLine.create(8, Component.literal("").append(Component.translatable("sidebar.blockhunt.game_time", Component.literal(formattedGameTime).withStyle(ChatFormatting.GREEN))), BlankFormat.INSTANCE));
 
         if (!stageManager.seekersReleased) {
             long seekersDurationTick = stageManager.seekersRelease - currentTick;
@@ -76,9 +76,8 @@ public class BlockHuntSidebar {
             int minutesR = (int) (totalSecondsR / 60);
             int secondsR = (int) (totalSecondsR % 60);
             String formattedSeekerTime = String.format("%d:%02d", minutesR, secondsR);
-
-            lines.set(lines.size() - 2, SidebarLine.create(10, Component.literal("").append(Component.translatable("sidebar.blockhunt.seeker_countdown", Component.literal(formattedSeekerTime).withStyle(ChatFormatting.GREEN)))));
-            lines.set(lines.size() - 1, SidebarLine.create(11, Component.literal("")));
+            lines.set(lines.size() - 2, SidebarLine.create(10, Component.literal("").append(Component.translatable("sidebar.blockhunt.seeker_countdown", Component.literal(formattedSeekerTime).withStyle(ChatFormatting.GREEN))), BlankFormat.INSTANCE));
+            lines.set(lines.size() - 1, SidebarLine.createEmpty(11));
         } else if (lines.size() == 11) {
             level.players().forEach(player -> ((ServerPlayer) player).playSound(SoundEvents.ENDER_DRAGON_GROWL, 1.0f, 1.0f));
             this.sidebar.removeLine(lines.size());

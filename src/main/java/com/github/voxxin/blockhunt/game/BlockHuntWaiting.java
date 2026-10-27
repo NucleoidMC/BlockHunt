@@ -45,7 +45,6 @@ public class BlockHuntWaiting {
     }
 
     public static GameOpenProcedure open(GameOpenContext<BlockHuntConfig> context) {
-        WaitingLobbyConfig config = new WaitingLobbyConfig(2, 32);
         BlockHuntMap map;
 
         try {
@@ -59,7 +58,7 @@ public class BlockHuntWaiting {
         return context.openWithLevel(map.levelConfig(), (game, level) -> {
             BlockHuntWaiting waiting = new BlockHuntWaiting(game.getGameSpace(), level, map, context.config());
 
-            GameWaitingLobby.addTo(game, config);
+            GameWaitingLobby.addTo(game, context.config().lobbyConfig());
 
             deniedBlockInteractions.clear();
 
